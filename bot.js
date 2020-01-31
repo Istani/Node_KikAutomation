@@ -9,8 +9,8 @@ console.log("Comming Soon?");
 const KikClient = require("kik-node-api");
 
 Kik = new KikClient({
-  username: "iamsubmiss",
-  password: "pokemon11",
+  username: "",
+  password: "",
   promptCaptchas: true,
   trackUserInfo: true,
   trackFriendInfo: false,cd ..
