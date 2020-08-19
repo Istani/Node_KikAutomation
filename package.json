@@ -12,7 +12,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "html-entities": "^1.2.1",
-    "kik-node-api": "^0.2.2",
+    "kik-node-api": "^2.0.0",
     "request": "^2.88.0"
   }
 }

@@ -2,18 +2,17 @@ const fs = require("fs");
 var envpath = __dirname + "/.env";
 var config = require("dotenv").config({ path: envpath });
 
-console.log("Comming Soon?");
+//console.log("Comming Soon?");
 
-/*
 // https://www.npmjs.com/package/kik-node-api
 const KikClient = require("kik-node-api");
 
 Kik = new KikClient({
-  username: "",
-  password: "",
+  username: process.env.KIK_Username,
+  password: process.env.KIK_Passwort,
   promptCaptchas: true,
   trackUserInfo: true,
-  trackFriendInfo: false,cd ..
+  trackFriendInfo: true,
 });
 
 Kik.connect();
@@ -30,7 +29,7 @@ Kik.on("receivedgroupimg", (group, sender, img) => {
 
 Kik.on("receivedprivatemsg", (sender, msg) => {
   console.log(sender, msg);
-  Kik.sendPrivateMessage(sender.jid, msg, (delivered, read) => {
+  Kik.sendMessage(sender.jid, msg, (delivered, read) => {
     if (delivered) {
       console.log("Delivered");
     } else if (read) {
@@ -41,4 +40,4 @@ Kik.on("receivedprivatemsg", (sender, msg) => {
 Kik.on("receivedprivateimg", (sender, msg, img) => {
   console.log(sender, msg, img);
 });
-*/
+
