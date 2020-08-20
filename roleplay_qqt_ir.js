@@ -22,7 +22,7 @@ function getRandomInt(max) {
 
 function RollePlayRequest() {
   var post = false;
-  var url = "http://roleplay.qqt.ir/php.php";
+  var url = "https://kikroleplay.com/api/send";
   last_post_id++;
   if (last_post_id >= data.length) {
     last_post_id = 0;
@@ -30,9 +30,9 @@ function RollePlayRequest() {
   request.post(
     {
       url: url,
-      qs: { do: "send", data: data[last_post_id] }
+      qs: { do: "send", data: data[last_post_id] },
     },
-    function(error, response, body) {
+    function (error, response, body) {
       if (error) {
         console.error(error);
         setTimeout(() => {
@@ -61,7 +61,8 @@ function RollePlayRequest() {
       if (post) {
         console.log(data[last_post_id].user, "Successfully", "Next in " + repeat_time + " Seconds");
       } else {
-        console.log(data[last_post_id].user, "Failed", "Next in " + repeat_time + " Seconds", "\n\r" + body);
+        //console.log(data[last_post_id].user, "Failed", "Next in " + repeat_time + " Seconds", "\n\r" + body);
+        console.log(body);
       }
       setTimeout(() => {
         RollePlayRequest();
