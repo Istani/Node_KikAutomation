@@ -10,14 +10,11 @@ const debug = new Debug();
 const KikClient = require("kik-node-api");
 const { nextTick } = require("process");
 
-var account_list=[];
-account_list.push("Istani");
-account_list.push("iamsubmiss");
-account_list.push("dickygirl69");
-account_list.push("sinep_sdrawkcab");
+if (fs.existsSync("sessions")) {
+  fs.rmdirSync("sessions", { recursive: true, force: true });
+}
 
-
-for (var user in account_list) {
+async function start(user) {
   console.log(account_list[user]);
 
   var Kik = new KikClient({
@@ -57,6 +54,15 @@ for (var user in account_list) {
     SendImageBack(sender, Kik);
   });
 }
+
+var account_list=[];
+account_list.push("dickygirl69");
+account_list.push("iamsubmiss");
+account_list.push("sinep_sdrawkcab");
+
+setTimeout(() => {start(0);}, 1000);
+setTimeout(() => {start(1);}, 4000);
+setTimeout(() => {start(2);}, 7000);
 
 function SendImageBack(sender, client) {
   var folder_struct={};
