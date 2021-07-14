@@ -3,41 +3,109 @@ var envpath = __dirname + "/.env";
 var config = require("dotenv").config({ path: envpath });
 
 //console.log("Comming Soon?");
+const Debug = require("sk_colorfullog");
+const debug = new Debug();
 
 // https://www.npmjs.com/package/kik-node-api
 const KikClient = require("kik-node-api");
+const { nextTick } = require("process");
 
-Kik = new KikClient({
-  username: process.env.KIK_Username,
-  password: process.env.KIK_Passwort,
-  promptCaptchas: true,
-  trackUserInfo: true,
-  trackFriendInfo: true,
-});
+var account_list=[];
+account_list.push("Istani");
+account_list.push("iamsubmiss");
+account_list.push("dickygirl69");
+account_list.push("sinep_sdrawkcab");
 
-Kik.connect();
-Kik.on("authenticated", () => {
-  console.log("Authenticated");
-});
 
-Kik.on("receivedgroupmsg", (group, sender, msg) => {
-  console.log(group, sender, msg);
-});
-Kik.on("receivedgroupimg", (group, sender, img) => {
-  console.log(group, sender, msg);
-});
+for (var user in account_list) {
+  console.log(account_list[user]);
 
-Kik.on("receivedprivatemsg", (sender, msg) => {
-  console.log(sender, msg);
-  Kik.sendMessage(sender.jid, msg, (delivered, read) => {
-    if (delivered) {
-      console.log("Delivered");
-    } else if (read) {
-      console.log("Read");
+  var Kik = new KikClient({
+    username: account_list[user],
+    password: process.env.KIK_Passwort,
+    promptCaptchas: false,
+    trackUserInfo: false,
+    trackFriendInfo: false,
+    device: {
+        
+    },
+    logger: {
+      file: ["warning", "error", "info", "raw"],
+      console: ["warning", "error", "info", "raw"]
     }
   });
-});
-Kik.on("receivedprivateimg", (sender, msg, img) => {
-  console.log(sender, msg, img);
-});
 
+  Kik.connect();
+  //Kik.authenticate(process.env.KIK_Username, process.env.KIK_Passwort)
+  Kik.on("authenticated", () => {
+    debug.log("Authenticated","API");
+  });
+
+  Kik.on("receivedgroupmsg", (group, sender, msg) => {
+    debug.log(sender.jid + ": " + msg,"receivedgroupmsg");
+  });
+  Kik.on("receivedgroupimg", (group, sender, img) => {
+    debug.log(sender.jid + " send an Image!","receivedgroupimg");
+    SendImageBack(sender);
+  });
+
+  Kik.on("receivedprivatemsg", (sender, msg) => {
+    debug.log(sender.jid + ": " + msg,"receivedprivatemsg");
+  });
+  Kik.on("receivedprivateimg", (sender, msg, img) => {
+    debug.log(sender.jid + " send an Image!","receivedprivateimg");
+    SendImageBack(sender, Kik);
+  });
+}
+
+function SendImageBack(sender, client) {
+  var folder_struct={};
+
+  var img_folder="images";
+  fs.readdirSync(img_folder).forEach(file => {  // istani
+    var tmp1=img_folder+"\\"+file;
+    if(typeof folder_struct[file]=="undefined") folder_struct[file]={};
+    fs.readdirSync(tmp1).forEach(file2 => { // private
+      var tmp2=tmp1+"\\"+file2;
+      if(typeof folder_struct[file][file2]=="undefined") folder_struct[file][file2]={};
+      fs.readdirSync(tmp2).forEach(file3 => { // user
+        var tmp3=tmp2+"\\"+file3;
+        if(typeof folder_struct[file][file2][file3]=="undefined") folder_struct[file][file2][file3]={};
+        fs.readdirSync(tmp3).forEach(file4 => { // file
+          folder_struct[file][file2][file3][file4]="";
+        });
+      }); 
+    }); 
+  });
+  var pics=[];
+  for (var a in folder_struct) {
+    var path="images\\"+a;
+    for (var t in folder_struct[a]) {
+      var path2=path+"\\"+t;
+      for (var u in folder_struct[a][t]) {
+        var path3=path2+"\\"+u;
+        if (typeof sender != "undefined") {
+          if (u!=sender.jid) {
+            for (var f in folder_struct[a][t][u]) {
+              pics.push(path3+"\\"+f);
+            }
+          }
+        } else {
+          for (var f in folder_struct[a][t][u]) {
+            pics.push(path3+"\\"+f);
+          }
+        }
+      }
+    }
+  }
+  var randompic=pics[Math.floor(Math.random() * pics.length)];
+  var pic_path=randompic;
+  if (typeof sender != "undefined") {
+    //Kik.sendMessage(sender.jid, "Random Dirty Picture Roulett", (delivered, read) => {});
+    client.sendImage(sender.jid, pic_path, false, false)
+  }
+  debug.log("Send " + pic_path);
+
+}
+
+SendImageBack();

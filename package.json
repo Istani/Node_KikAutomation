@@ -10,9 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^8.2.0",
-    "html-entities": "^1.2.1",
-    "kik-node-api": "^2.0.0",
-    "request": "^2.88.0"
+    "dotenv": "^8.6.0",
+    "html-entities": "^1.4.0",
+    "kik-node-api": "^4.0.4",
+    "request": "^2.88.2",
+    "sk_colorfullog": "git+https://github.com/Istani/nodemodule_colorfullog.git"
   }
 }

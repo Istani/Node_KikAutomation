@@ -2,6 +2,10 @@ const fs = require("fs");
 var envpath = __dirname + "/.env";
 var config = require("dotenv").config({ path: envpath });
 
+
+const Debug = require("sk_colorfullog");
+const debug = new Debug();
+debug.log("test","moin");
 const request = require("request");
 //
 
@@ -30,7 +34,7 @@ function RollePlayRequest() {
   request.post(
     {
       url: url,
-      qs: { do: "send", data: data[last_post_id] },
+      //qs: { do: "send", data: data[last_post_id] },
     },
     function (error, response, body) {
       if (error) {
@@ -40,7 +44,9 @@ function RollePlayRequest() {
         }, 1000);
         return;
       }
-      //console.log(response);
+      //console.log(body);
+      fs.writeFileSync("tmp/response.json", JSON.stringify(response, null, 2));
+      process.exit(1);
 
       if (body.startsWith('<div class="alert alert-success">Your post has been successfully sent.')) {
         post = true;

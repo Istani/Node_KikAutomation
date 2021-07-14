@@ -1,0 +1,10 @@
+{
+  "file": "C:\\PRO\\SKAUF\\Node_KikAutomation\\colorfullog.config.json",
+  "colors": {
+    "API": "Light Cyan",
+    "RECEIVEDPRIVATEIMG": "White",
+    "RECEIVEDPRIVATEMSG": "Green"
+  },
+  "printType": true,
+  "printTime": true
+}
