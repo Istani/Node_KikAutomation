@@ -14,7 +14,7 @@ if (fs.existsSync("sessions")) {
   fs.rmdirSync("sessions", { recursive: true, force: true });
 }
 
-async function start(user) {
+function start(user) {
   console.log(account_list[user]);
 
   var Kik = new KikClient({
@@ -48,6 +48,7 @@ async function start(user) {
 
   Kik.on("receivedprivatemsg", (sender, msg) => {
     debug.log(sender.jid + ": " + msg,"receivedprivatemsg");
+    
   });
   Kik.on("receivedprivateimg", (sender, msg, img) => {
     debug.log(sender.jid + " send an Image!","receivedprivateimg");
@@ -56,13 +57,13 @@ async function start(user) {
 }
 
 var account_list=[];
-account_list.push("dickygirl69");
 account_list.push("iamsubmiss");
-account_list.push("sinep_sdrawkcab");
+//account_list.push("dickygirl69");
+//account_list.push("sinep_sdrawkcab");
 
 setTimeout(() => {start(0);}, 1000);
-setTimeout(() => {start(1);}, 4000);
-setTimeout(() => {start(2);}, 7000);
+//setTimeout(() => {start(1);}, 5000);
+//setTimeout(() => {start(2);}, 9000);
 
 function SendImageBack(sender, client) {
   var folder_struct={};
