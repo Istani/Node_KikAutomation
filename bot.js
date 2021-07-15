@@ -70,13 +70,13 @@ function SendImageBack(sender, client) {
 
   var img_folder="images";
   fs.readdirSync(img_folder).forEach(file => {  // istani
-    var tmp1=img_folder+"\\"+file;
+    var tmp1=img_folder+"/"+file;
     if(typeof folder_struct[file]=="undefined") folder_struct[file]={};
     fs.readdirSync(tmp1).forEach(file2 => { // private
-      var tmp2=tmp1+"\\"+file2;
+      var tmp2=tmp1+"/"+file2;
       if(typeof folder_struct[file][file2]=="undefined") folder_struct[file][file2]={};
       fs.readdirSync(tmp2).forEach(file3 => { // user
-        var tmp3=tmp2+"\\"+file3;
+        var tmp3=tmp2+"/"+file3;
         if(typeof folder_struct[file][file2][file3]=="undefined") folder_struct[file][file2][file3]={};
         fs.readdirSync(tmp3).forEach(file4 => { // file
           folder_struct[file][file2][file3][file4]="";
@@ -86,20 +86,20 @@ function SendImageBack(sender, client) {
   });
   var pics=[];
   for (var a in folder_struct) {
-    var path="images\\"+a;
+    var path="images/"+a;
     for (var t in folder_struct[a]) {
-      var path2=path+"\\"+t;
+      var path2=path+"/"+t;
       for (var u in folder_struct[a][t]) {
-        var path3=path2+"\\"+u;
+        var path3=path2+"/"+u;
         if (typeof sender != "undefined") {
           if (u!=sender.jid) {
             for (var f in folder_struct[a][t][u]) {
-              pics.push(path3+"\\"+f);
+              pics.push(path3+"/"+f);
             }
           }
         } else {
           for (var f in folder_struct[a][t][u]) {
-            pics.push(path3+"\\"+f);
+            pics.push(path3+"/"+f);
           }
         }
       }
