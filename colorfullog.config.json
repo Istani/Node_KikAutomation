@@ -1,8 +1,7 @@
 {
   "file": "/media/usb/projects/Node_KikAutomation/colorfullog.config.json",
   "colors": {
-    "API": "Red",
-    "RECEIVEDPRIVATEIMG": "Yellow"
+    "API": "Light Magenta"
   },
   "printType": true,
   "printTime": true
