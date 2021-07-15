@@ -43,7 +43,7 @@ function start(user) {
   });
   Kik.on("receivedgroupimg", (group, sender, img) => {
     debug.log(sender.jid + " send an Image!","receivedgroupimg");
-    SendImageBack(sender);
+		setTimeout(() => {SendImageBack(sender);}, 20000);
   });
 
   Kik.on("receivedprivatemsg", (sender, msg) => {
@@ -70,13 +70,13 @@ function SendImageBack(sender, client) {
 
   var img_folder="images";
   fs.readdirSync(img_folder).forEach(file => {  // istani
-    var tmp1=img_folder+"\\"+file;
+    var tmp1=img_folder+"/"+file;
     if(typeof folder_struct[file]=="undefined") folder_struct[file]={};
     fs.readdirSync(tmp1).forEach(file2 => { // private
-      var tmp2=tmp1+"\\"+file2;
+      var tmp2=tmp1+"/"+file2;
       if(typeof folder_struct[file][file2]=="undefined") folder_struct[file][file2]={};
       fs.readdirSync(tmp2).forEach(file3 => { // user
-        var tmp3=tmp2+"\\"+file3;
+        var tmp3=tmp2+"/"+file3;
         if(typeof folder_struct[file][file2][file3]=="undefined") folder_struct[file][file2][file3]={};
         fs.readdirSync(tmp3).forEach(file4 => { // file
           folder_struct[file][file2][file3][file4]="";
@@ -86,33 +86,57 @@ function SendImageBack(sender, client) {
   });
   var pics=[];
   for (var a in folder_struct) {
-    var path="images\\"+a;
+    var path="images/"+a;
     for (var t in folder_struct[a]) {
-      var path2=path+"\\"+t;
+      var path2=path+"/"+t;
       for (var u in folder_struct[a][t]) {
-        var path3=path2+"\\"+u;
-        if (typeof sender != "undefined") {
-          if (u!=sender.jid) {
-            for (var f in folder_struct[a][t][u]) {
-              pics.push(path3+"\\"+f);
+        var path3=path2+"/"+u;        
+          if (typeof sender != "undefined") {
+            if (u!=sender.jid) {
+              for (var f in folder_struct[a][t][u]) {
+                pics.push(path3+"/"+f);
+              }
             }
-          }
-        } else {
-          for (var f in folder_struct[a][t][u]) {
-            pics.push(path3+"\\"+f);
+          } else {
+            for (var f in folder_struct[a][t][u]) {
+              pics.push(path3+"/"+f);
+            }
           }
         }
       }
     }
-  }
+  CheckImages(pics);
   var randompic=pics[Math.floor(Math.random() * pics.length)];
   var pic_path=randompic;
   if (typeof sender != "undefined") {
     //Kik.sendMessage(sender.jid, "Random Dirty Picture Roulett", (delivered, read) => {});
-    client.sendImage(sender.jid, pic_path, false, false)
+    client.sendImage(sender.jid, pic_path, false, false);
   }
   debug.log("Send " + pic_path);
-
 }
 
+const execSync = require('child_process').execSync;
+function CheckImages(pics) {
+  for (var idx in pics) {
+    var mimeType = execSync('file --mime-type -b "' + pics[idx] + '"').toString();
+    var ptype = mimeType.trim();
+    switch (ptype) {
+      case 'video/mp4':
+        var tmp_file=pics[idx].replace("images", "videos").replace(".jpeg", ".avi");
+        debug.error("Stupid File: " +tmp_file,"USER");
+        var tmp_str=tmp_file.split("/",4);
+        var tmp_path=tmp_str.join("/");
+        fs.mkdirSync(tmp_path, {recursive: true});
+        fs.renameSync( pics[idx], tmp_file);
+        break;
+      case 'image/jpeg':
+        // Everything is good!
+        break;
+      default:
+        debug.log("File? " +ptype,"USER");
+    }
+  }
+}
+
+//file --mime-type -b 
 SendImageBack();
