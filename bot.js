@@ -10,6 +10,8 @@ const debug = new Debug();
 const KikClient = require("kik-node-api");
 const { nextTick } = require("process");
 
+const Messages = require("./models/messages.js");
+
 var count_users=0;
 var count_pictures=0;
 
@@ -51,35 +53,42 @@ Kik.on("authenticated", () => {
     () => {
       Kik.getUserInfo("dickygirl69", false, (users) => {
         admin_user=users[0].jid;
-        Kik.sendMessage(admin_user,"Status - Users: " + count_users + " Picture: " + count_pictures);
+        SendMessageBack(admin_user,"Status - Users: " + count_users + " Picture: " + count_pictures);
         debug.log("Set Admin User to: " + admin_user, "APP");
       });
     }, 10000
   )
 });
 
-Kik.on("receivedgroupmsg", (group, sender, msg) => {
+Kik.on("receivedgroupmsg", async (group, sender, msg) => {
   debug.log(sender + ": " + msg, "receivedgroupmsg");
+  await Messages.query().insert({"from": group, "to": logined_user, "message":sender+": "+msg});
 });
-Kik.on("receivedgroupimg", (group, sender, img) => {
+Kik.on("receivedgroupimg", async (group, sender, img) => {
   debug.log(sender + " send "+img+"!", "receivedgroupimg");
   SendImageBack(group,Kik);
+  await Messages.query().insert({"from": group, "to": logined_user, "message":sender+': <img src="'+img+'">'});
 });
 
-Kik.on("receivedprivatemsg", (sender, msg) => {
+Kik.on("receivedprivatemsg", async (sender, msg) => {
   debug.log(sender + ": " + msg, "receivedprivatemsg");
-
+  await Messages.query().insert({"from": sender, "to": logined_user, "message":msg});
 });
-Kik.on("receivedprivateimg", (sender, img) => {
+Kik.on("receivedprivateimg", async (sender, img) => {
   debug.log(sender + " send "+img+"!", "receivedprivateimg");
   SendImageBack(sender, Kik);
   if (admin_user!=sender) {
-    Kik.sendMessage(admin_user, "Form "+sender+": ");
+    SendMessageBack(admin_user, "Form "+sender+": ");
     Kik.sendImage(admin_user, __dirname + "/" + img);
   }
+  await Messages.query().insert({"from": sender, "to": logined_user, "message":'<img src="'+img+'">'});
 });
 
-function SendImageBack(sender, client) {
+async function SendMessageBack(sender, msg) {
+  await Messages.query().insert({"from": logined_user, "to": sender, "message":msg});
+  Kik.sendMessage(sender, msg);
+}
+async function SendImageBack(sender, client) {
   const path_class=require("path");
   var folder_struct = {};
 
@@ -127,14 +136,15 @@ function SendImageBack(sender, client) {
       }
     }
   }
-  CheckImages(pics);
+  //CheckImages(pics);
   var randompic = pics[Math.floor(Math.random() * pics.length)];
   var pic_path = randompic;
   if (typeof sender != "undefined" && typeof pic_path != "undefined") {
-    //Kik.sendMessage(sender.jid, "Random Dirty Picture Roulett", (delivered, read) => {});
-    setTimeout(() => {
+    //SendMessageBack(sender.jid, "Random Dirty Picture Roulett", (delivered, read) => {});
+    setTimeout(async () => {
       client.sendImage(sender, pic_path, false, false);
       debug.log("Send " + pic_path + " to " + sender, "SENDEDPRIVATEIMG");
+      await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="'+pic_path+'">'});
     },5000);
   }
 }
