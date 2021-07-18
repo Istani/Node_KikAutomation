@@ -42,6 +42,7 @@ Kik.on("authenticated", () => {
       Kik.getUserInfo("dickygirl69", false, (users) => {
         //console.log(users);
         Kik.sendMessage(users[0].jid,"Status - Users: " + count_users + " Picture: " + count_pictures);
+        //Kik.sendMessage("et51418_yx1@talk.kik.com","Your are welcome!");
       });
     }, 10000
   )
