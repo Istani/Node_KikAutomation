@@ -80,6 +80,7 @@ Kik.on("receivedprivateimg", async (sender, img) => {
   if (admin_user!=sender) {
     SendMessageBack(admin_user, "Form "+sender+": ");
     Kik.sendImage(admin_user, __dirname + "/" + img);
+    await Messages.query().insert({"from": logined_user, "to": admin_user, "message":'<img src="'+img+'">'});
   }
   await Messages.query().insert({"from": sender, "to": logined_user, "message":'<img src="'+img+'">'});
 });
@@ -144,7 +145,7 @@ async function SendImageBack(sender, client) {
     setTimeout(async () => {
       client.sendImage(sender, pic_path, false, false);
       debug.log("Send " + pic_path + " to " + sender, "SENDEDPRIVATEIMG");
-      await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="'+pic_path+'">'});
+      await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="./'+pic_path+'">'});
     },5000);
   }
 }
