@@ -15,6 +15,8 @@ const Users = require("./models/users.js");
 const Roleplays = require("./models/roleplays.js");
 const Messages_outgoing = require("./models/messages_outgoing.js");
 
+var greetings="Excuse me. I am sorry to use your time, but i want to start a game! PictureRoulette - You send a funny, sexy picture of yourself and get back a random picture from someone else (for everyone you send)... (well don't have to be yourself but i would prefer it) There are currently "+count_users+" Players with "+count_pictures+" Pictures (Inclueding myself) It's all anonymous and of course there is a kind of bot included in this... So it could take some time before i answer to your questions or texts...";
+
 var CronJob = require('cron').CronJob;
 var job = new CronJob('0 */16 * * * *', async function() {
   debug.log("Search new Game","PictureRoulette");
@@ -24,9 +26,8 @@ var job = new CronJob('0 */16 * * * *', async function() {
     var receiver = list_possibles[0];
     Kik.getUserInfo(receiver.name, false, async (users) => {
       var user=users[0].jid;
-      SendMessageBack(user,"Excuse me. I am sorry to use your time, but i want to start a game! PictureRoulette - You send a funny, sexy picture of yourself and get back a random picture from someone else... (well don't have to be yourself but i would prefer it) There are currently "+count_users+" Players with "+count_pictures+" Pictures (Inclueding myself) It's all anonymous and of course there is a kind of bot included in this... So it could take some time before i answer to your questions or texts...");
-      //SendMessageBack(user,"Oh and I myself can't see the pictures in this controll programm. If you wish me to see anything you have to send it to my private account... But if i dont want it, i probably blocking you...");
       debug.log("Start with: " + user, "PictureRoulette");
+      checkUsers(jid);
       receiver.used=true;
       await Roleplays.query().patch(receiver).where("name", receiver.name);
     });
@@ -239,6 +240,7 @@ async function checkUsers(jid) {
       if (u.length==0) {
         debug.log("Added new User: "+jid, "APP");
         await Users.query().insert(users[0]);
+        SendMessageBack(jid,greetings);
       } else {
         await Users.query().patch(users[0]).where("jid", users[0].jid);
       }

@@ -107,8 +107,8 @@
 				$("#tabs-"+msg.chatter).append("<p class='msg_text "+msg.from+"'>"+msg.message+"</p>");
 			}	else {
 				$("#userlist").append('<li><a href="#tabs-'+msg.chatter+'"><span class="tab">'+msg.chatter+'</span></a></li>');
-				$("#userlist").after('<div id="tabs-'+msg.chatter+'"></div>');
-				$("#tabs-"+msg.chatter).append("<p class='msg_text "+msg.from+"'>"+msg.message+"</p>");
+				$("#userlist").after('<div id="tabs-'+msg.chatter+'"><div id="message-'+msg.chatter+'"></div><div><p>this is the end</p></div></div>');
+				$("#message-"+msg.chatter).append("<p class='msg_text "+msg.from+"'>"+msg.message+"</p>");
 
 				$( "#tabs" ).tabs().addClass( "ui-tabs-vertical ui-helper-clearfix" );
 				$( "#tabs li" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
