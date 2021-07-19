@@ -17,7 +17,6 @@ const Messages_outgoing = require("./models/messages_outgoing.js");
 
 var CronJob = require('cron').CronJob;
 var job = new CronJob('0 */16 * * * *', async function() {
-  return;
   debug.log("Search new Game","PictureRoulette");
   //await Roleplays.query().insert({"name": "Istani"});
   var list_possibles=await Roleplays.query().where("used", false).orderBy("sex").orderBy("age").orderBy("updated_at");
@@ -35,8 +34,8 @@ var job = new CronJob('0 */16 * * * *', async function() {
 }, null, true, 'Europe/Berlin');
 job.start();
 
+// ToDo: Why outgoing?
 var job2 = new CronJob('0 * * * * *', async function() {
-  return;
   var list_msgs=await Messages_outgoing.query().where("from", logined_user);
   if (list_msgs.length>0) {
     var message=list_msgs[0];
@@ -85,14 +84,6 @@ Kik.on("authenticated", () => {
   SendImageBack();
 
   q.push(() => {
-    Kik.getUserInfo(process.env.KIK_Username, false, (users) => {
-      logined_user=users[0].jid;
-      debug.log("Set Logined User to: " + logined_user, "APP");
-      checkUsers(logined_user);
-    });
-  });
-
-  q.push(() => {
     Kik.getUserInfo("dickygirl69", false, (users) => {
       admin_user=users[0].jid;
       SendMessageBack(admin_user,"Status - Users: " + count_users + " Picture: " + count_pictures);
@@ -100,23 +91,34 @@ Kik.on("authenticated", () => {
       checkUsers(admin_user);
     });
   });
+
+  q.push(() => {
+    Kik.getUserInfo(process.env.KIK_Username, false, (users) => {
+      logined_user=users[0].jid;
+      debug.log("Set Logined User to: " + logined_user, "APP");
+      checkUsers(logined_user);
+    });
+  });
 });
 
 Kik.on("receivedgroupmsg", async (group, sender, msg) => {
   debug.log(sender + ": " + msg, "receivedgroupmsg");
-  await Messages.query().insert({"from": group, "to": logined_user, "message":sender+": "+msg});
+  var tmp=await Messages.query().insert({"from": group, "to": logined_user, "message":sender+": "+msg});
+  sendMsg(tmp);
   checkUsers(sender);
 });
 Kik.on("receivedgroupimg", async (group, sender, img) => {
   debug.log(sender + " send "+img+"!", "receivedgroupimg");
   SendImageBack(group,Kik);
-  await Messages.query().insert({"from": group, "to": logined_user, "message":sender+': <img src="'+img+'">'});
+  var tmp=await Messages.query().insert({"from": group, "to": logined_user, "message":sender+': <img src="'+img+'">'});
+  sendMsg(tmp);
   checkUsers(sender);
 });
 
 Kik.on("receivedprivatemsg", async (sender, msg) => {
   debug.log(sender + ": " + msg, "receivedprivatemsg");
-  await Messages.query().insert({"from": sender, "to": logined_user, "message":msg});
+  var tmp=await Messages.query().insert({"from": sender, "to": logined_user, "message":msg});
+  sendMsg(tmp);
   checkUsers(sender);
 });
 Kik.on("receivedprivateimg", async (sender, img) => {
@@ -130,14 +132,16 @@ Kik.on("receivedprivateimg", async (sender, img) => {
     
     await Messages.query().insert({"from": logined_user, "to": admin_user, "message":'<img src="'+img+'">'});
   }
-  await Messages.query().insert({"from": sender, "to": logined_user, "message":'<img src="'+img+'">'});
+  var tmp = await Messages.query().insert({"from": sender, "to": logined_user, "message":'<img src="'+img+'">'});
+  sendMsg(tmp);
   checkUsers(sender);
 });
 
 async function SendMessageBack(sender, msg) {
   
   q.push(async () => {
-    await Messages.query().insert({"from": logined_user, "to": sender, "message":msg});
+    var tmp=await Messages.query().insert({"from": logined_user, "to": sender, "message":msg});
+    sendMsg(tmp);
     Kik.sendMessage(sender, msg);
   });
 }
@@ -189,7 +193,7 @@ async function SendImageBack(sender, client) {
       }
     }
   }
-  //CheckImages(pics);
+  CheckImages(pics);
   var randompic = pics[Math.floor(Math.random() * pics.length)];
   var pic_path = randompic;
   if (typeof sender != "undefined" && typeof pic_path != "undefined") {
@@ -198,7 +202,8 @@ async function SendImageBack(sender, client) {
         client.sendImage(sender, pic_path, false, false);
       });
       debug.log("Send " + pic_path + " to " + sender, "SENDEDPRIVATEIMG");
-      await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="./'+pic_path+'">'});
+      var tmp=await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="./'+pic_path+'">'});
+      sendMsg(tmp);
   }
 }
 
@@ -240,6 +245,10 @@ async function checkUsers(jid) {
   });
 }
 
+async function sendMsg(msg) {
+  io.emit("msg",msg);
+}
+
 const express = require('express');
 const exphbs = require("express-handlebars");
 const app = express();
@@ -254,26 +263,37 @@ app.set("view engine", ".hbs");
 
 const server = require('http').createServer(app);
 
-const io = require('socket.io')(server);
-io.on('connection', () => { /* … */ });
+var io = require("socket.io")(server, {
+  cors: {
+    origin: "*"
+  }
+});
+io.on("connection", async function(socket) {
+  debug.log("Incomming Connection", "socket");
+  var msgs = await Messages.query().where("to", logined_user).orWhere("from",logined_user);
+  socket.emit("login",logined_user);
+  socket.emit("msgs",msgs);
+  socket.on("disconnect", function() {});
+});
 
 app.use(express.static("public"));
+app.use('/images', express.static(__dirname + '/images'));
+app.use('/videos', express.static(__dirname + '/videos'));
 app.use(function(req, res, next) {
+
   if (fs.existsSync("./tmp/req.json") == false) {
     //fs.writeFileSync("./tmp/req.json", JSON.stringify(req));
   }
   if (fs.existsSync("./tmp/res.json") == false) {
     //fs.writeFileSync("./tmp/res.json", JSON.stringify(res));
   }
-  console.log("REQ:", req.url);
+  console.log("REQ:", __dirname +req.url);
+  
   next();
 });
 
 app.get("/", async function(req, res, next) {
-  const gUser = await Users.query().withGraphFetched("[msg_in, msg_out]");
-  var dat={"user":gUser.toJSON()};
-  console.log(dat);
-  res.render("main", dat );
+  res.render("main", {} );
 });
 
-server.listen(3000);
+server.listen(3000, () => console.log("Webinterface running! Port: " + 3000));

@@ -3,7 +3,11 @@
   "colors": {
     "API": "Green",
     "RECEIVEDPRIVATEIMG": "Light Green",
-    "RECEIVEDPRIVATEMSG": "White"
+    "RECEIVEDPRIVATEMSG": "White",
+    "APP": "Green",
+    "PICTUREROULETTE": "Cyan",
+    "SENDEDPRIVATEIMG": "Light Yellow",
+    "SOCKET": "Light Cyan"
   },
   "printType": true,
   "printTime": true

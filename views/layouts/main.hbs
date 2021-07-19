@@ -49,7 +49,7 @@
 	</style>
 </head>
 <body>
-  <div id="content" style="display: none">
+  <div id="content">
     <center>
       {{{body}}}
     </center>
@@ -59,8 +59,63 @@
 
 <script src="jquery-ui-1.12.1/external/jquery/jquery.js"></script>
 <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script>
-$( "#accordion" ).accordion();
+	var logined_user="";
+  		
+	$(document).ready(function () {
+      console.log(location.origin)
+      var socket = io(location.origin);
+      socket.on('connect', function () {
+        socket.on('disconnect', function () {
+          setTimeout(() => {
+            location.reload();
+          }, 100);
+        });
+      });
+			socket.on('msg', function (msg) {
+				msg_process(msg)
+			})
+			socket.on('msgs', function (msgs) {
+				for (var i in msgs) {
+					msg_process(msgs[i]);
+				}
+			})
+			socket.on('login', function (user) {
+				logined_user=user;
+			})
+    });
+
+		function msg_process(msg) {
+			msg.chatter="unkown";
+			if (msg.from==logined_user) {
+				msg.chatter=msg.to;
+				msg.from="me";
+			}
+			if (msg.to==logined_user) {
+				msg.chatter=msg.from;
+				msg.to="me";
+			}
+			msg.responseto=msg.chatter;
+			msg.chatter=msg.chatter.replace("@talk.kik.com","");
+			
+			console.log(msg);
+
+			var tabs = $( "#tabs" ).tabs();
+			
+			if ($("#tabs-"+msg.chatter).length) {
+				$("#tabs-"+msg.chatter).append("<p class='msg_text "+msg.from+"'>"+msg.message+"</p>");
+			}	else {
+				$("#userlist").append('<li><a href="#tabs-'+msg.chatter+'"><span class="tab">'+msg.chatter+'</span></a></li>');
+				$("#userlist").after('<div id="tabs-'+msg.chatter+'"></div>');
+				$("#tabs-"+msg.chatter).append("<p class='msg_text "+msg.from+"'>"+msg.message+"</p>");
+
+				$( "#tabs" ).tabs().addClass( "ui-tabs-vertical ui-helper-clearfix" );
+				$( "#tabs li" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
+			}
+
+			tabs.tabs( "refresh" );
+		}
 </script>
 
 </body>
