@@ -14,6 +14,29 @@ class Obj extends Model {
     return "jid";
   }
 
+  static get relationMappings() {
+    const Messages = require("./messages.js");
+
+    return {
+      msg_in: {
+        relation: Model.HasManyRelation,
+        modelClass: Messages,
+        join: {
+          from: "users.jid",
+          to: "messages.from"
+        }
+      }, 
+      msg_out: {
+        relation: Model.HasManyRelation,
+        modelClass: Messages,
+        join: {
+          from: "users.jid",
+          to: "messages.to"
+        }
+      }
+    };
+  }
+
   $beforeInsert() {
     this.$beforeUpdate();
     this.created_at = new Date().toISOString();
