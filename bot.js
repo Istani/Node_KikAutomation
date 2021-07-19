@@ -36,11 +36,11 @@ var job = new CronJob('0 */16 * * * *', async function() {
 job.start();
 
 var job2 = new CronJob('0 * * * * *', async function() {
-  return;
   var list_msgs=await Messages_outgoing.query().where("from", logined_user);
   if (list_msgs.length>0) {
     var message=list_msgs[0];
     SendMessageBack(message.to,message.message);
+    debug.log("Send to "+message.to + ": "+message.message,"sendedprivatemsg");
     await Messages_outgoing.query().delete().where(message);
   }
 }, null, true, 'Europe/Berlin');
@@ -189,7 +189,7 @@ async function SendImageBack(sender, client) {
       }
     }
   }
-  //CheckImages(pics);
+  CheckImages(pics);
   var randompic = pics[Math.floor(Math.random() * pics.length)];
   var pic_path = randompic;
   if (typeof sender != "undefined" && typeof pic_path != "undefined") {
