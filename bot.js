@@ -144,7 +144,7 @@ async function SendImageBack(sender, client) {
     setTimeout(async () => {
       client.sendImage(sender, pic_path, false, false);
       debug.log("Send " + pic_path + " to " + sender, "SENDEDPRIVATEIMG");
-      await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="'+pic_path+'">'});
+      await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="./'+pic_path+'">'});
     },5000);
   }
 }
