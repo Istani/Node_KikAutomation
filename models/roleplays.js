@@ -8,10 +8,10 @@ Model.knex(knex);
 
 class Obj extends Model {
   static get tableName() {
-    return "messages";
+    return "roleplays";
   }
   static get idColumn() {
-    return "created_at, from, to";
+    return "name";
   }
 
   $beforeInsert() {
@@ -21,7 +21,9 @@ class Obj extends Model {
 
   $beforeUpdate() {
     this.updated_at = new Date().toISOString();
+    this.name = emoji.unemojify(this.name);
     this.message = emoji.unemojify(this.message);
+    this.location = emoji.unemojify(this.location);
   }
 }
 

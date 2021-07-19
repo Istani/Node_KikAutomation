@@ -10,13 +10,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "better-queue": "^3.8.10",
+    "cron": "^1.8.2",
     "dotenv": "^8.6.0",
+    "express": "^4.17.1",
+    "express-handlebars": "^5.3.2",
+    "handlebars": "^4.7.7",
     "html-entities": "^1.4.0",
     "kik-node-api": "^4.0.4",
     "knex": "^0.95.7",
     "mysql": "^2.18.1",
+    "node-emoji": "^1.10.0",
     "objection": "^2.2.15",
     "request": "^2.88.2",
-    "sk_colorfullog": "git+https://github.com/Istani/nodemodule_colorfullog.git"
+    "sk_colorfullog": "git+https://github.com/Istani/nodemodule_colorfullog.git",
+    "socket.io": "^4.1.3"
   }
 }

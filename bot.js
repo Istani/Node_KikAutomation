@@ -11,6 +11,47 @@ const KikClient = require("kik-node-api");
 const { nextTick } = require("process");
 
 const Messages = require("./models/messages.js");
+const Users = require("./models/users.js");
+const Roleplays = require("./models/roleplays.js");
+const Messages_outgoing = require("./models/messages_outgoing.js");
+
+var CronJob = require('cron').CronJob;
+var job = new CronJob('0 */16 * * * *', async function() {
+  return;
+  debug.log("Search new Game","PictureRoulette");
+  //await Roleplays.query().insert({"name": "Istani"});
+  var list_possibles=await Roleplays.query().where("used", false).orderBy("sex").orderBy("age").orderBy("updated_at");
+  if (list_possibles.length>0) {
+    var receiver = list_possibles[0];
+    Kik.getUserInfo(receiver.name, false, async (users) => {
+      var user=users[0].jid;
+      SendMessageBack(user,"Excuse me. I am sorry to use your time, but i want to start a game! PictureRoulette - You send a funny, sexy picture of yourself and get back a random picture from someone else... (well don't have to be yourself but i would prefer it) There are currently "+count_users+" Players with "+count_pictures+" Pictures (Inclueding myself) It's all anonymous and of course there is a kind of bot included in this... So it could take some time before i answer to your questions or texts...");
+      //SendMessageBack(user,"Oh and I myself can't see the pictures in this controll programm. If you wish me to see anything you have to send it to my private account... But if i dont want it, i probably blocking you...");
+      debug.log("Start with: " + user, "PictureRoulette");
+      receiver.used=true;
+      await Roleplays.query().patch(receiver).where("name", receiver.name);
+    });
+  }
+}, null, true, 'Europe/Berlin');
+job.start();
+
+var job2 = new CronJob('0 * * * * *', async function() {
+  return;
+  var list_msgs=await Messages_outgoing.query().where("from", logined_user);
+  if (list_msgs.length>0) {
+    var message=list_msgs[0];
+    SendMessageBack(message.to,message.message);
+    await Messages_outgoing.query().delete().where(message);
+  }
+}, null, true, 'Europe/Berlin');
+job2.start();
+
+
+var Queue = require('better-queue');
+var q = new Queue(async function (input, cb) {
+  await input();
+  cb(null, true);
+}, { batchSize: 1, afterProcessDelay: 2000 });
 
 var count_users=0;
 var count_pictures=0;
@@ -31,7 +72,7 @@ var Kik = new KikClient({
   },
   logger: {
     file: ["warning", "error", "info", "raw"],
-    console: ["warning", "error", "info"]
+    console: ["error"]
   }
 });
 
@@ -43,50 +84,62 @@ Kik.on("authenticated", () => {
   //file --mime-type -b 
   SendImageBack();
 
-  
-  Kik.getUserInfo(process.env.KIK_Username, false, (users) => {
-    logined_user=users[0].jid;
-    debug.log("Set Logined User to: " + logined_user, "APP");
+  q.push(() => {
+    Kik.getUserInfo(process.env.KIK_Username, false, (users) => {
+      logined_user=users[0].jid;
+      debug.log("Set Logined User to: " + logined_user, "APP");
+      checkUsers(logined_user);
+    });
   });
 
-  setTimeout(
-    () => {
-      Kik.getUserInfo("dickygirl69", false, (users) => {
-        admin_user=users[0].jid;
-        SendMessageBack(admin_user,"Status - Users: " + count_users + " Picture: " + count_pictures);
-        debug.log("Set Admin User to: " + admin_user, "APP");
-      });
-    }, 10000
-  )
+  q.push(() => {
+    Kik.getUserInfo("dickygirl69", false, (users) => {
+      admin_user=users[0].jid;
+      SendMessageBack(admin_user,"Status - Users: " + count_users + " Picture: " + count_pictures);
+      debug.log("Set Admin User to: " + admin_user, "APP");
+      checkUsers(admin_user);
+    });
+  });
 });
 
 Kik.on("receivedgroupmsg", async (group, sender, msg) => {
   debug.log(sender + ": " + msg, "receivedgroupmsg");
   await Messages.query().insert({"from": group, "to": logined_user, "message":sender+": "+msg});
+  checkUsers(sender);
 });
 Kik.on("receivedgroupimg", async (group, sender, img) => {
   debug.log(sender + " send "+img+"!", "receivedgroupimg");
   SendImageBack(group,Kik);
   await Messages.query().insert({"from": group, "to": logined_user, "message":sender+': <img src="'+img+'">'});
+  checkUsers(sender);
 });
 
 Kik.on("receivedprivatemsg", async (sender, msg) => {
   debug.log(sender + ": " + msg, "receivedprivatemsg");
   await Messages.query().insert({"from": sender, "to": logined_user, "message":msg});
+  checkUsers(sender);
 });
 Kik.on("receivedprivateimg", async (sender, img) => {
   debug.log(sender + " send "+img+"!", "receivedprivateimg");
   SendImageBack(sender, Kik);
   if (admin_user!=sender) {
-    SendMessageBack(admin_user, "Form "+sender+": ");
-    Kik.sendImage(admin_user, __dirname + "/" + img);
+    //SendMessageBack(admin_user, "Form "+sender+": ");
+    q.push(() => {
+      Kik.sendImage(admin_user, __dirname + "/" + img);
+    });
+    
+    await Messages.query().insert({"from": logined_user, "to": admin_user, "message":'<img src="'+img+'">'});
   }
   await Messages.query().insert({"from": sender, "to": logined_user, "message":'<img src="'+img+'">'});
+  checkUsers(sender);
 });
 
 async function SendMessageBack(sender, msg) {
-  await Messages.query().insert({"from": logined_user, "to": sender, "message":msg});
-  Kik.sendMessage(sender, msg);
+  
+  q.push(async () => {
+    await Messages.query().insert({"from": logined_user, "to": sender, "message":msg});
+    Kik.sendMessage(sender, msg);
+  });
 }
 async function SendImageBack(sender, client) {
   const path_class=require("path");
@@ -141,11 +194,11 @@ async function SendImageBack(sender, client) {
   var pic_path = randompic;
   if (typeof sender != "undefined" && typeof pic_path != "undefined") {
     //SendMessageBack(sender.jid, "Random Dirty Picture Roulett", (delivered, read) => {});
-    setTimeout(async () => {
-      client.sendImage(sender, pic_path, false, false);
+      q.push(() => {
+        client.sendImage(sender, pic_path, false, false);
+      });
       debug.log("Send " + pic_path + " to " + sender, "SENDEDPRIVATEIMG");
       await Messages.query().insert({"from": logined_user, "to": sender, "message":'<img src="./'+pic_path+'">'});
-    },5000);
   }
 }
 
@@ -172,3 +225,55 @@ function CheckImages(pics) {
     }
   }
 }
+
+async function checkUsers(jid) {
+  const u = await Users.query().where("jid",jid);
+  q.push(() => {
+    Kik.getUserInfo(jid, false, async (users) => {
+      if (u.length==0) {
+        debug.log("Added new User: "+jid, "APP");
+        await Users.query().insert(users[0]);
+      } else {
+        await Users.query().patch(users[0]).where("jid", users[0].jid);
+      }
+    });
+  });
+}
+
+const express = require('express');
+const exphbs = require("express-handlebars");
+const app = express();
+var hbs = exphbs.create({
+  helpers: {},
+  defaultLayout: "main",
+  extname: ".hbs",
+  allowProtoPropertiesByDefault: true
+});
+app.engine(".hbs", hbs.engine);
+app.set("view engine", ".hbs");
+
+const server = require('http').createServer(app);
+
+const io = require('socket.io')(server);
+io.on('connection', () => { /* … */ });
+
+app.use(express.static("public"));
+app.use(function(req, res, next) {
+  if (fs.existsSync("./tmp/req.json") == false) {
+    //fs.writeFileSync("./tmp/req.json", JSON.stringify(req));
+  }
+  if (fs.existsSync("./tmp/res.json") == false) {
+    //fs.writeFileSync("./tmp/res.json", JSON.stringify(res));
+  }
+  console.log("REQ:", req.url);
+  next();
+});
+
+app.get("/", async function(req, res, next) {
+  const gUser = await Users.query().withGraphFetched("[msg_in, msg_out]");
+  var dat={"user":gUser.toJSON()};
+  console.log(dat);
+  res.render("main", dat );
+});
+
+server.listen(3000);

@@ -8,7 +8,7 @@ Model.knex(knex);
 
 class Obj extends Model {
   static get tableName() {
-    return "messages";
+    return "messages_outgoing";
   }
   static get idColumn() {
     return "created_at, from, to";
