@@ -1,12 +1,50 @@
-<!-- Accordion -->
-<h2 class="demoHeaders">Accordion</h2>
-<div id="accordion">
-	{{#each user}}
-	<h3>{{user.name}}</h3>
-	<div>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</div>
-	{{/each}}
-	<h3>Second</h3>
-	<div>Phasellus mattis tincidunt nibh.</div>
-	<h3>Third</h3>
-	<div>Nam dui erat, auctor a, dignissim quis.</div>
+  
+  <style>
+  .ui-tabs-vertical { width: 55em; }
+  .ui-tabs-vertical .ui-tabs-nav { padding: .2em .1em .2em .2em; float: left; width: 12em; }
+  .ui-tabs-vertical .ui-tabs-nav li { clear: left; width: 100%; border-bottom-width: 1px !important; border-right-width: 0 !important; margin: 0 -1px .2em 0; }
+  .ui-tabs-vertical .ui-tabs-nav li a { display:block; }
+  .ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; }
+  .ui-tabs-vertical .ui-tabs-panel { padding: 1em; float: right; width: 40em;}
+
+	img {
+		display: block;
+		max-width:300px;
+		/*max-height:95px;*/
+		width: auto;
+		height: auto;
+	}
+
+	.msg_text {
+		color: #000;
+		clear: both;
+		line-height: 18px;
+		font-size: 15px;
+		padding: 8px;
+		position: relative;
+		margin: 8px 0;
+		max-width: 85%;
+		word-wrap: break-word;
+		text-align: left;
+		float:left;
+	}
+	.msg_text.me{
+		text-align: right !important;
+		float:right !important;
+	}
+
+	.msg_text:after {
+		position: absolute;
+		width: 0;
+		height: 0;
+		border-style: solid;
+		clear:both
+	}
+  </style>
+
+	<div id="tabs">
+  <ul id="userlist">
+  </ul>
 </div>
+ 
+
