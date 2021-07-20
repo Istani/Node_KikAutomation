@@ -238,7 +238,7 @@ async function checkUsers(jid) {
       if (u.length==0) {
         debug.log("Added new User: "+jid, "APP");
         await Users.query().insert(users[0]);
-        var greetings="Excuse me. I am sorry to use your time, but i want to start a game! PictureRoulette - You send a funny, sexy picture of yourself and get back a random picture from someone else (for everyone you send)... (well don't have to be yourself but i would prefer it) There are currently "+count_users+" Players with "+count_pictures+" Pictures (Inclueding myself) It's all anonymous and of course there is a kind of bot included in this... So it could take some time before i answer to your questions or texts...";
+        var greetings="Excuse me. I am sorry to use your time, but i want to start a game! PictureRoulette - You send a funny, sexy picture of yourself and get back a random picture from someone else (for everyone you send)... (well don't have to be yourself but i would prefer it) There are currently "+count_users+" Players with "+count_pictures+" Pictures (Inclueding myself) It's all anonymous and of course there is a kind of bot included in this... So it could take some time before i answer to your questions or texts... Oh and feel free to tell others about it ;)";
         SendMessageBack(jid,greetings);
       } else {
         await Users.query().patch(users[0]).where("jid", users[0].jid);
